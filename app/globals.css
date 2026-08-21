@@ -1,36 +1,27 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #0F172A; /* deep blue */
-  --color-primary-light: #1E293B; 
-  --color-secondary: #0D9488; /* teal/aqua */
-  --color-secondary-light: #14B8A6;
-  --color-accent: #16A34A; /* green */
+  --color-primary: #0B3D5C; /* Deep Blue */
+  --color-primary-light: #1A8FA3; /* Using Teal for primary hover */
+  --color-secondary: #1A8FA3; /* Teal */
+  --color-secondary-light: #3EB489; /* Green for secondary hover */
+  --color-accent: #3EB489; /* Green */
   
-  --color-background: #ffffff;
-  --color-foreground: #0F172A;
+  --color-background: #F7FAFB; /* Off-white */
+  --color-foreground: #1E2A33; /* Dark Slate */
   
-  --color-card: #F8FAFC;
-  --color-card-foreground: #0F172A;
-  --color-border: #E2E8F0;
-  --color-muted: #64748B;
-  --color-muted-foreground: #94A3B8;
+  --color-card: #E4EAEE; /* Light Gray */
+  --color-card-foreground: #1E2A33; /* Dark Slate */
+  --color-border: #E4EAEE; /* Light Gray */
+  --color-muted: #8295a3; /* Lighter Slate */
+  --color-muted-foreground: #475a68; /* Mid Slate */
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  @theme inline {
-    --color-background: #020617;
-    --color-foreground: #F8FAFC;
-    
-    --color-card: #0F172A;
-    --color-card-foreground: #F8FAFC;
-    --color-border: #1E293B;
-    --color-muted: #94A3B8;
-    --color-muted-foreground: #64748B;
-  }
-}
+@custom-variant dark (&:is(.dark *));
+
+
 
 body {
   background-color: var(--color-background);

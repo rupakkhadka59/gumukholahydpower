@@ -23,7 +23,7 @@ export default function Navbar() {
     { name: "About Us", href: "/about" },
     { name: "Projects", href: "/projects" },
     { name: "How It Works", href: "/how-it-works" },
-    { name: "Sustainability", href: "/sustainability" },
+    { name: "Downloads", href: "/downloads" },
     { name: "News", href: "/news" },
     { name: "Careers", href: "/careers" },
     { name: "Contact", href: "/contact" },
@@ -33,7 +33,7 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-white/90 backdrop-blur-md shadow-sm dark:bg-slate-950/90"
+          ? "bg-primary/95 backdrop-blur-md shadow-sm"
           : "bg-transparent"
       }`}
     >
@@ -41,10 +41,10 @@ export default function Navbar() {
         <div className="flex justify-between h-20 items-center">
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="bg-primary p-2 rounded-lg group-hover:bg-secondary transition-colors">
+              <div className="bg-white/20 p-2 rounded-lg group-hover:bg-secondary transition-colors">
                 <Droplets className="h-6 w-6 text-white" />
               </div>
-              <span className={`font-bold text-xl tracking-tight transition-colors ${isScrolled ? 'text-primary dark:text-white' : 'text-primary dark:text-white lg:text-white lg:drop-shadow-md'}`}>
+              <span className="font-bold text-xl tracking-tight transition-colors text-white">
                 Gumu Khola
               </span>
             </Link>
@@ -55,12 +55,10 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-sm font-medium transition-colors hover:text-secondary ${
+                className={`text-sm font-medium transition-colors hover:text-white ${
                   pathname === link.href
-                    ? "text-secondary"
-                    : isScrolled
-                    ? "text-muted-foreground dark:text-slate-300"
-                    : "text-muted-foreground dark:text-slate-300 lg:text-white/90 lg:hover:text-white"
+                    ? "text-white"
+                    : "text-white/80"
                 }`}
               >
                 {link.name}

@@ -34,9 +34,9 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-bold text-primary dark:text-white text-lg">Headquarters</h3>
                   <p className="text-muted-foreground mt-1">
-                    123 Energy Way<br />
-                    Renewable District<br />
-                    City, State 12345
+                    Lamidanda 05<br />
+                    Kalinchowk Rural Muncipality<br />
+                    Dolakha, Nepal
                   </p>
                 </div>
               </div>
@@ -48,8 +48,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-bold text-primary dark:text-white text-lg">Phone</h3>
                   <p className="text-muted-foreground mt-1">
-                    Main: +1 (555) 123-4567<br />
-                    Support: +1 (555) 987-6543
+                    +977-9812345678
                   </p>
                 </div>
               </div>

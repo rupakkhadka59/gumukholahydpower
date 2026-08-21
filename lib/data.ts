@@ -105,3 +105,47 @@ export const news: NewsItem[] = [
     content: 'Full article content would go here...'
   }
 ];
+
+export interface DownloadItem {
+  id: string;
+  title: string;
+  description: string;
+  fileSize: string;
+  type: string;
+  date: string;
+}
+
+export const downloads: DownloadItem[] = [
+  {
+    id: 'd1',
+    title: 'Annual Hydropower Generation Report 2025',
+    description: 'Comprehensive overview of power generation metrics and grid contributions across all our operational facilities.',
+    fileSize: '4.2 MB',
+    type: 'PDF',
+    date: '2026-01-15'
+  },
+  {
+    id: 'd2',
+    title: 'Environmental Impact Assessment - Upper Gumu',
+    description: 'Detailed analysis of the ecological preservation measures and biodiversity protection plan for the Upper Gumu project.',
+    fileSize: '12.8 MB',
+    type: 'PDF',
+    date: '2025-11-20'
+  },
+  {
+    id: 'd3',
+    title: 'Run-of-River Technical Specifications',
+    description: 'Engineering parameters, turbine efficiency ratings, and flow rate models used in our standard plant designs.',
+    fileSize: '2.1 MB',
+    type: 'PDF',
+    date: '2025-08-05'
+  },
+  {
+    id: 'd4',
+    title: 'Community Development Initiatives Summary',
+    description: 'A look back at local infrastructure, education, and healthcare projects funded by Gumu Khola Hydropower.',
+    fileSize: '5.5 MB',
+    type: 'PDF',
+    date: '2026-03-10'
+  }
+];

@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="bg-primary text-slate-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-          
+
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-2">
               <div className="bg-secondary p-2 rounded-lg">
@@ -35,7 +35,7 @@ export default function Footer() {
                 <Link href="/how-it-works" className="hover:text-secondary transition-colors">How It Works</Link>
               </li>
               <li>
-                <Link href="/sustainability" className="hover:text-secondary transition-colors">Sustainability</Link>
+                <Link href="/downloads" className="hover:text-secondary transition-colors">Downloads</Link>
               </li>
               <li>
                 <Link href="/careers" className="hover:text-secondary transition-colors">Careers</Link>
@@ -48,11 +48,11 @@ export default function Footer() {
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-secondary flex-shrink-0" />
-                <span>123 Energy Way,<br />Renewable District,<br />City, State 12345</span>
+                <span>Lamidanda 05,<br />Kalinchowk Rural Muncipality,<br />Dolakha, Nepal</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-secondary flex-shrink-0" />
-                <span>+1 (555) 123-4567</span>
+                <span>+977-9812345678</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
@@ -81,12 +81,13 @@ export default function Footer() {
           </div>
 
         </div>
-        
+
         <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
           <p>&copy; {new Date().getFullYear()} Gumu Khola Hydropower. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/admin/login" className="hover:text-white transition-colors opacity-50 hover:opacity-100">Staff Login</Link>
           </div>
         </div>
       </div>
