@@ -23,6 +23,8 @@ export interface NewsItem {
   date: string;
   excerpt: string;
   content: string;
+  imageUrl?: string;
+  pdfUrl?: string;
 }
 
 export interface TeamMember {
@@ -113,6 +115,7 @@ export interface DownloadItem {
   fileSize: string;
   type: string;
   date: string;
+  fileUrl?: string;
 }
 
 export const downloads: DownloadItem[] = [

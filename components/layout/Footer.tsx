@@ -1,74 +1,79 @@
 import Link from "next/link";
-import { Droplets, Mail, Phone, MapPin } from "lucide-react";
+import Image from "next/image";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-primary text-slate-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+    <footer className="overflow-hidden bg-white/85 text-primary/80 backdrop-blur-md">
+      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <div className="grid grid-cols-1 gap-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
 
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-2">
-              <div className="bg-secondary p-2 rounded-lg">
-                <Droplets className="h-6 w-6 text-white" />
-              </div>
-              <span className="font-bold text-xl text-white tracking-tight">
+              <Image
+                src="/logo.webp"
+                alt="Gumu Khola logo"
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-full bg-white object-contain p-1"
+              />
+              <span className="font-bold text-xl text-primary tracking-tight">
                 Gumu Khola
               </span>
             </Link>
-            <p className="text-sm leading-relaxed max-w-xs">
+            <p className="max-w-xs text-sm leading-relaxed">
               Powering our communities with clean, reliable, and sustainable hydropower. Committed to environmental stewardship and engineering excellence.
             </p>
 
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-6">Quick Links</h3>
-            <ul className="space-y-4 text-sm">
+            <h3 className="mb-5 font-semibold text-primary">Quick Links</h3>
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/about" className="hover:text-secondary transition-colors">About Us</Link>
+                <Link href="/about" className="hover:text-secondary-light transition-colors">About Us</Link>
               </li>
               <li>
-                <Link href="/projects" className="hover:text-secondary transition-colors">Our Projects</Link>
+                <Link href="/projects" className="hover:text-secondary-light transition-colors">Our Projects</Link>
               </li>
               <li>
-                <Link href="/how-it-works" className="hover:text-secondary transition-colors">How It Works</Link>
+                <Link href="/how-it-works" className="hover:text-secondary-light transition-colors">How It Works</Link>
               </li>
               <li>
-                <Link href="/downloads" className="hover:text-secondary transition-colors">Downloads</Link>
+                <Link href="/downloads" className="hover:text-secondary-light transition-colors">Downloads</Link>
               </li>
               <li>
-                <Link href="/careers" className="hover:text-secondary transition-colors">Careers</Link>
+                <Link href="/careers" className="hover:text-secondary-light transition-colors">Careers</Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-6">Contact Us</h3>
-            <ul className="space-y-4 text-sm">
+            <h3 className="mb-5 font-semibold text-primary">Contact Us</h3>
+            <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-secondary flex-shrink-0" />
                 <span>Lamidanda 05,<br />Kalinchowk Rural Muncipality,<br />Dolakha, Nepal</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-secondary flex-shrink-0" />
-                <span>+977-9812345678</span>
+                <span className="min-w-0 break-words">+977-9812345678</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
-                <span>info@gumukholahydro.com</span>
+                <span className="min-w-0 break-words">info@gumukholahydro.com</span>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-6">Newsletter</h3>
-            <p className="text-sm mb-4">Stay updated with our latest projects and sustainability initiatives.</p>
+            <h3 className="mb-5 font-semibold text-primary">Newsletter</h3>
+            <p className="mb-4 text-sm">Stay updated with our latest projects and sustainability initiatives.</p>
             <form className="space-y-2">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary text-white text-sm"
+                className="w-full px-4 py-2 bg-white/70 border border-primary/20 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary text-primary text-sm"
                 required
               />
               <button
@@ -82,12 +87,12 @@ export default function Footer() {
 
         </div>
 
-        <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
-          <p>&copy; {new Date().getFullYear()} Gumu Khola Hydropower. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-            <Link href="/admin/login" className="hover:text-white transition-colors opacity-50 hover:opacity-100">Staff Login</Link>
+        <div className="mt-12 flex flex-col items-center gap-4 border-t border-primary/20 pt-8 text-center text-sm text-primary/60 md:flex-row md:justify-between md:text-left">
+          <p className="max-w-full">&copy; {new Date().getFullYear()} Gumu Khola Hydropower. All rights reserved.</p>
+          <div className="flex max-w-full flex-wrap justify-center gap-x-5 gap-y-2 md:justify-end">
+            <Link href="/privacy" className="hover:text-secondary-light transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-secondary-light transition-colors">Terms of Service</Link>
+            <Link href="/admin/login" className="hover:text-secondary-light transition-colors opacity-50 hover:opacity-100">Staff Login</Link>
           </div>
         </div>
       </div>

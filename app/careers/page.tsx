@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Hero from "@/components/ui/Hero";
 import { CheckCircle2 } from "lucide-react";
+import CareersListings from "@/components/careers/CareersListings";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -15,30 +16,6 @@ export default function CareersPage() {
     "Professional development and training budgets",
     "Retirement planning and company match",
     "Relocation assistance for specific roles",
-  ];
-
-  const jobs = [
-    {
-      id: "j1",
-      title: "Senior Civil Engineer",
-      type: "Full-Time",
-      location: "On-Site (Upper Gumu Project)",
-      department: "Engineering",
-    },
-    {
-      id: "j2",
-      title: "Environmental Health & Safety Manager",
-      type: "Full-Time",
-      location: "Regional Office",
-      department: "Operations",
-    },
-    {
-      id: "j3",
-      title: "Hydrologist",
-      type: "Full-Time",
-      location: "Headquarters",
-      department: "Research & Development",
-    },
   ];
 
   return (
@@ -68,33 +45,7 @@ export default function CareersPage() {
             </ul>
           </div>
           
-          <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-8 border border-border">
-            <h2 className="text-2xl font-bold text-primary dark:text-white mb-6">Open Positions</h2>
-            
-            <div className="space-y-4">
-              {jobs.map((job) => (
-                <div key={job.id} className="bg-white dark:bg-slate-950 p-5 rounded-xl border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-secondary">
-                  <div>
-                    <h3 className="font-bold text-lg text-primary dark:text-white">{job.title}</h3>
-                    <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                      <span>{job.department}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span>{job.location}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span>{job.type}</span>
-                    </div>
-                  </div>
-                  <button className="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap">
-                    Apply Now
-                  </button>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-8 text-center text-sm text-muted-foreground">
-              Don't see a perfect fit? Send your resume to <a href="mailto:careers@gumukholahydro.com" className="text-secondary hover:underline">careers@gumukholahydro.com</a>
-            </div>
-          </div>
+          <CareersListings />
         </div>
         
       </div>

@@ -82,7 +82,7 @@ export default function ContactPage() {
           </div>
           
           {/* Contact Form */}
-          <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
+          <div id="contact-form" className="bg-card rounded-2xl border border-border p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-primary dark:text-white mb-6">Send a Message</h2>
             <form className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-6">

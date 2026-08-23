@@ -1,32 +1,54 @@
 "use client";
 
-import { useState } from "react";
-import { downloads as initialDownloads } from "@/lib/data";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import type { DownloadItem } from "@/lib/data";
 import { Plus, Pencil, Trash2, X, FileText } from "lucide-react";
 
 const emptyForm = { title: "", description: "", fileSize: "", type: "PDF", date: "" };
 
 export default function AdminDownloadsPage() {
-  const [items, setItems] = useState<DownloadItem[]>(initialDownloads);
+  const [items, setItems] = useState<DownloadItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<DownloadItem | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const openAdd = () => { setEditItem(null); setForm(emptyForm); setShowModal(true); };
-  const openEdit = (item: DownloadItem) => { setEditItem(item); setForm({ title: item.title, description: item.description, fileSize: item.fileSize, type: item.type, date: item.date }); setShowModal(true); };
+  useEffect(() => {
+    fetch("/api/downloads", { cache: "no-store" }).then((response) => response.json()).then((result: { data: DownloadItem[] }) => setItems(result.data)).finally(() => setIsLoading(false));
+  }, []);
 
-  const handleSave = () => {
+  const openAdd = () => { setEditItem(null); setForm(emptyForm); setSelectedFile(null); setShowModal(true); };
+  const openEdit = (item: DownloadItem) => { setEditItem(item); setForm({ title: item.title, description: item.description, fileSize: item.fileSize, type: item.type, date: item.date }); setSelectedFile(null); setShowModal(true); };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSelectedFile(event.target.files?.[0] ?? null);
+  };
+
+  const handleSave = async () => {
+    if (!editItem && !selectedFile) return;
+    const body = new FormData();
+    body.append("title", form.title);
+    body.append("description", form.description);
+    body.append("type", "PDF");
+    body.append("date", form.date);
+    if (selectedFile) body.append("file", selectedFile);
+    const response = await fetch("/api/downloads", { method: "POST", body });
+    if (!response.ok) return;
+    const result = await response.json() as { data: DownloadItem };
     if (editItem) {
-      setItems((prev) => prev.map((d) => d.id === editItem.id ? { ...editItem, ...form } : d));
+      setItems((prev) => prev.map((d) => d.id === editItem.id ? result.data : d));
     } else {
-      setItems((prev) => [...prev, { id: `d${Date.now()}`, ...form }]);
+      setItems((prev) => [result.data, ...prev]);
     }
     setShowModal(false);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Delete this download?")) setItems((prev) => prev.filter((d) => d.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this download?")) return;
+    const response = await fetch("/api/downloads", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    if (response.ok) setItems((prev) => prev.filter((d) => d.id !== id));
   };
 
   return (
@@ -42,6 +64,7 @@ export default function AdminDownloadsPage() {
       </div>
 
       <div className="space-y-4">
+        {isLoading && <p className="text-sm text-[#8295a3]">Loading reports...</p>}
         {items.map((item) => (
           <div key={item.id} className="bg-white rounded-xl border border-[#E4EAEE] p-5 shadow-sm flex items-start justify-between gap-4">
             <div className="flex items-start gap-4 flex-1">
@@ -82,16 +105,21 @@ export default function AdminDownloadsPage() {
                 <label className="block text-sm font-medium text-[#1E2A33] mb-1">Description</label>
                 <textarea rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="w-full px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A8FA3] resize-none bg-[#F7FAFB]" />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1E2A33] mb-1">PDF File</label>
+                <label className="flex cursor-pointer items-center rounded-lg border border-dashed border-[#1A8FA3]/50 bg-[#F7FAFB] px-3 py-2 text-sm text-[#1A8FA3]">
+                  <span className="truncate">{selectedFile?.name ?? (editItem ? "Replace PDF file (optional)" : "Choose PDF file")}</span>
+                  <input ref={fileInputRef} type="file" accept="application/pdf,.pdf" onChange={handleFileChange} className="sr-only" />
+                </label>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#1E2A33] mb-1">File Size</label>
-                  <input type="text" placeholder="e.g. 4.2 MB" value={form.fileSize} onChange={(e) => setForm((f) => ({ ...f, fileSize: e.target.value }))} className="w-full px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A8FA3] bg-[#F7FAFB]" />
+                  <label className="block text-sm font-medium text-[#1E2A33] mb-1">File Type</label>
+                  <input type="text" value="PDF" readOnly className="w-full px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm bg-[#F7FAFB]" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#1E2A33] mb-1">File Type</label>
-                  <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A8FA3] bg-[#F7FAFB]">
-                    <option>PDF</option><option>DOCX</option><option>XLSX</option><option>PPT</option>
-                  </select>
+                  <label className="block text-sm font-medium text-[#1E2A33] mb-1">File Size</label>
+                  <input type="text" value={selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB` : form.fileSize} readOnly placeholder="Calculated after upload" className="w-full px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm bg-[#F7FAFB]" />
                 </div>
               </div>
               <div>

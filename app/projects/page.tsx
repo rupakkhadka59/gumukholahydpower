@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Hero from "@/components/ui/Hero";
 import ProjectCard from "@/components/ui/ProjectCard";
-import { projects } from "@/lib/data";
+import type { Project } from "@/lib/data";
 
 export default function ProjectsPage() {
   const [filter, setFilter] = useState<string>("All");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/projects", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((result: { data: Project[] }) => setProjects(result.data))
+      .catch(() => undefined)
+      .finally(() => setIsLoading(false));
+  }, []);
   
   const statuses = ["All", "Operational", "Under Construction", "Planning"];
   
@@ -43,6 +53,7 @@ export default function ProjectsPage() {
           </div>
         </div>
         
+        {isLoading && <p className="text-sm text-muted-foreground">Loading projects...</p>}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />

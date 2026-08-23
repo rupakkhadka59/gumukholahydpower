@@ -1,30 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { projects, news, downloads } from "@/lib/data";
-import { Zap, Newspaper, Download, Briefcase, ArrowRight, TrendingUp } from "lucide-react";
-
-const statCards = [
-  { label: "Total Projects", value: projects.length, icon: Zap, color: "bg-[#0B3D5C]", href: "/admin/projects" },
-  { label: "News Articles", value: news.length, icon: Newspaper, color: "bg-[#1A8FA3]", href: "/admin/news" },
-  { label: "Downloads", value: downloads.length, icon: Download, color: "bg-[#3EB489]", href: "/admin/downloads" },
-  { label: "Vacancies", value: 3, icon: Briefcase, color: "bg-[#8295a3]", href: "/admin/careers" },
-];
-
-const recentActivity = [
-  { text: "New news article added: 'Upper Gumu Milestone'", time: "2 hours ago" },
-  { text: "Project 'Upper Gumu' status updated to Under Construction", time: "1 day ago" },
-  { text: "Download added: 'Annual Report 2025'", time: "3 days ago" },
-  { text: "New vacancy posted: Senior Civil Engineer", time: "5 days ago" },
-];
+import { useEffect, useState } from "react";
+import { careersStorageKey, initialVacancies, Vacancy } from "@/lib/careers";
+import type { ActivityItem } from "@/lib/activity-store";
+import { Zap, Newspaper, Download, Briefcase, Images, ArrowRight, TrendingUp } from "lucide-react";
 
 export default function AdminDashboardPage() {
+  const [counts, setCounts] = useState({ projects: 0, news: 0, reports: 0, vacancies: 0, gallery: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/projects", { cache: "no-store" }).then((response) => response.json()),
+      fetch("/api/news", { cache: "no-store" }).then((response) => response.json()),
+      fetch("/api/downloads", { cache: "no-store" }).then((response) => response.json()),
+      fetch("/api/gallery", { cache: "no-store" }).then((response) => response.json()),
+    ]).then(([projectsResult, newsResult, reportsResult, galleryResult]) => {
+      let vacancyCount = initialVacancies.length;
+      const storedVacancies = window.localStorage.getItem(careersStorageKey);
+      if (storedVacancies) {
+        try {
+          vacancyCount = (JSON.parse(storedVacancies) as Vacancy[]).length;
+        } catch {
+          window.localStorage.removeItem(careersStorageKey);
+        }
+      }
+      setCounts({
+        projects: projectsResult.data.length,
+        news: newsResult.data.length,
+        reports: reportsResult.data.length,
+        vacancies: vacancyCount,
+        gallery: galleryResult.data.length,
+      });
+    }).catch(() => undefined).finally(() => setIsLoading(false));
+
+    fetch("/api/activity", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((result: { data: ActivityItem[] }) => setRecentActivity(result.data));
+  }, []);
+
+  const statCards = [
+    { label: "Total Projects", value: counts.projects, icon: Zap, color: "bg-[#0B3D5C]", href: "/admin/projects" },
+    { label: "News Articles", value: counts.news, icon: Newspaper, color: "bg-[#1A8FA3]", href: "/admin/news" },
+    { label: "Reports", value: counts.reports, icon: Download, color: "bg-[#3EB489]", href: "/admin/downloads" },
+    { label: "Vacancies", value: counts.vacancies, icon: Briefcase, color: "bg-[#8295a3]", href: "/admin/careers" },
+    { label: "Gallery Pictures", value: counts.gallery, icon: Images, color: "bg-[#3EB489]", href: "/admin/gallery" },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#1E2A33]">Dashboard</h1>
-        <p className="text-[#8295a3] mt-1">Welcome back, Admin. Here's an overview of your site.</p>
+        <p className="text-[#8295a3] mt-1">Welcome back, Admin. Here&apos;s an overview of your site.</p>
       </div>
 
       {/* Stats Grid */}
@@ -39,70 +69,31 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowRight className="w-4 h-4 text-[#E4EAEE] group-hover:text-[#1A8FA3] transition-colors" />
               </div>
-              <p className="text-3xl font-bold text-[#1E2A33]">{stat.value}</p>
+              <p className="text-3xl font-bold text-[#1E2A33]">{isLoading ? "..." : stat.value}</p>
               <p className="text-sm text-[#8295a3] mt-1">{stat.label}</p>
             </Link>
           );
         })}
       </div>
 
-      {/* Quick Actions + Recent Activity */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl border border-[#E4EAEE] p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-[#1E2A33] mb-4">Quick Actions</h2>
-          <div className="space-y-3">
-            <Link href="/admin/news" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F7FAFB] border border-[#E4EAEE] hover:border-[#1A8FA3] transition-all group">
-              <div className="w-9 h-9 bg-[#1A8FA3]/10 rounded-lg flex items-center justify-center">
-                <Newspaper className="w-5 h-5 text-[#1A8FA3]" />
-              </div>
-              <div>
-                <p className="font-medium text-[#1E2A33] text-sm">Post News Article</p>
-                <p className="text-xs text-[#8295a3]">Publish a press release or update</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-[#E4EAEE] group-hover:text-[#1A8FA3] ml-auto transition-colors" />
-            </Link>
-            <Link href="/admin/downloads" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F7FAFB] border border-[#E4EAEE] hover:border-[#1A8FA3] transition-all group">
-              <div className="w-9 h-9 bg-[#3EB489]/10 rounded-lg flex items-center justify-center">
-                <Download className="w-5 h-5 text-[#3EB489]" />
-              </div>
-              <div>
-                <p className="font-medium text-[#1E2A33] text-sm">Add Download / Article</p>
-                <p className="text-xs text-[#8295a3]">Upload a new report or document</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-[#E4EAEE] group-hover:text-[#1A8FA3] ml-auto transition-colors" />
-            </Link>
-            <Link href="/admin/careers" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#F7FAFB] border border-[#E4EAEE] hover:border-[#1A8FA3] transition-all group">
-              <div className="w-9 h-9 bg-[#0B3D5C]/10 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-[#0B3D5C]" />
-              </div>
-              <div>
-                <p className="font-medium text-[#1E2A33] text-sm">Post Vacancy</p>
-                <p className="text-xs text-[#8295a3]">Announce a new job opening</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-[#E4EAEE] group-hover:text-[#1A8FA3] ml-auto transition-colors" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl border border-[#E4EAEE] p-6 shadow-sm">
+      {/* Recent Activity */}
+      <div className="bg-white rounded-xl border border-[#E4EAEE] p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-[#1A8FA3]" />
             <h2 className="text-lg font-bold text-[#1E2A33]">Recent Activity</h2>
           </div>
           <div className="space-y-4">
-            {recentActivity.map((item, idx) => (
-              <div key={idx} className="flex gap-4">
+            {recentActivity.length === 0 && <p className="text-sm text-[#8295a3]">No recent activity yet.</p>}
+            {recentActivity.slice(0, 5).map((item) => (
+              <div key={item.id} className="flex gap-4">
                 <div className="w-2 h-2 rounded-full bg-[#1A8FA3] mt-1.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm text-[#1E2A33]">{item.text}</p>
-                  <p className="text-xs text-[#8295a3] mt-0.5">{item.time}</p>
+                  <p className="text-xs text-[#8295a3] mt-0.5">{new Date(item.createdAt).toLocaleString()}</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
       </div>
 
       {/* View Site */}

@@ -9,9 +9,9 @@ import {
   Newspaper,
   Download,
   Briefcase,
+  Images,
   LogOut,
   Menu,
-  X,
   Droplets,
   ChevronRight,
 } from "lucide-react";
@@ -20,8 +20,9 @@ const navItems = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/admin/projects", icon: Zap },
   { name: "News", href: "/admin/news", icon: Newspaper },
-  { name: "Downloads", href: "/admin/downloads", icon: Download },
+  { name: "Reports", href: "/admin/downloads", icon: Download },
   { name: "Careers", href: "/admin/careers", icon: Briefcase },
+  { name: "Gallery", href: "/admin/gallery", icon: Images },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

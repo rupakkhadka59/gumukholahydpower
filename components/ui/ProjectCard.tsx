@@ -8,6 +8,7 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+  const hasValidImage = typeof project.image === "string" && (project.image.startsWith("/") || /^https?:\/\//.test(project.image));
   const statusColor = 
     project.status === "Operational" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
     project.status === "Under Construction" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" :
@@ -16,7 +17,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
       <div className="relative h-64 w-full overflow-hidden bg-slate-100">
-        {project.image && (
+        {hasValidImage && (
           <Image
             src={project.image}
             alt={project.name}

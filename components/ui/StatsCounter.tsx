@@ -13,23 +13,23 @@ export default function StatsCounter({ stats }: StatsCounterProps) {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <div ref={ref} className="bg-primary-light dark:bg-slate-900 py-16">
+    <div ref={ref} className="bg-[#0B5EA8] py-14 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-slate-700/50">
+        <div className="grid grid-cols-2 gap-y-10 md:grid-cols-4 md:gap-y-0 divide-x divide-white/20">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.id}
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className={`text-center px-4 ${index === 0 || index === 2 ? "border-l-0" : ""} ${index === 0 ? "md:border-l-0" : ""} border-slate-700/50`}
+              className={`text-center px-3 sm:px-4 ${index === 0 || index === 2 ? "border-l-0" : ""} ${index === 0 ? "md:border-l-0" : ""}`}
             >
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-1 whitespace-nowrap text-3xl font-bold text-white sm:text-4xl md:text-5xl mb-2">
                 {stat.prefix}
                 <Counter value={stat.value} isInView={isInView} />
                 {stat.suffix}
               </div>
-              <div className="text-sm md:text-base text-slate-400 font-medium">
+              <div className="text-sm md:text-base text-blue-100 font-medium">
                 {stat.label}
               </div>
             </motion.div>

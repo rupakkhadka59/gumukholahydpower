@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import PublicChrome from "@/components/layout/PublicChrome";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -14,6 +13,9 @@ export const metadata: Metadata = {
   title: {
     template: "%s | Gumu Khola Hydropower",
     default: "Gumu Khola Hydropower | Clean & Renewable Energy",
+  },
+  icons: {
+    icon: "/logo.webp",
   },
   description: "Powering the region with clean, renewable hydropower. Dedicated to environmental responsibility and engineering excellence.",
   keywords: ["Hydropower", "Renewable Energy", "Gumu Khola", "Clean Energy", "Sustainability"],
@@ -27,9 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        <Navbar />
-        <main className="flex-1 flex flex-col">{children}</main>
-        <Footer />
+        <PublicChrome>{children}</PublicChrome>
       </body>
     </html>
   );

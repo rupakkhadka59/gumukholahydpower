@@ -1,53 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, X, MapPin, Building2, Calendar, CheckCircle, XCircle } from "lucide-react";
-
-interface Vacancy {
-  id: string;
-  title: string;
-  type: string;
-  location: string;
-  department: string;
-  deadline: string;
-  description: string;
-  isOpen: boolean;
-}
-
-const initialVacancies: Vacancy[] = [
-  { id: "j1", title: "Senior Civil Engineer", type: "Full-Time", location: "On-Site (Upper Gumu)", department: "Engineering", deadline: "2026-09-30", description: "Lead civil engineering works on site.", isOpen: true },
-  { id: "j2", title: "Environmental Health & Safety Manager", type: "Full-Time", location: "Regional Office", department: "Operations", deadline: "2026-09-15", description: "Manage EHS compliance across all plant sites.", isOpen: true },
-  { id: "j3", title: "Hydrologist", type: "Full-Time", location: "Headquarters", department: "R&D", deadline: "2026-10-01", description: "Analyze hydrological data to optimize generation output.", isOpen: false },
-];
+import { careersStorageKey, initialVacancies, Vacancy } from "@/lib/careers";
 
 const emptyForm: Omit<Vacancy, "id"> = {
   title: "", type: "Full-Time", location: "", department: "", deadline: "", description: "", isOpen: true,
 };
 
 export default function AdminCareersPage() {
-  const [items, setItems] = useState<Vacancy[]>(initialVacancies);
+  const [items, setItems] = useState<Vacancy[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Vacancy | null>(null);
   const [form, setForm] = useState(emptyForm);
+
+  useEffect(() => {
+    const storedVacancies = window.localStorage.getItem(careersStorageKey);
+    if (!storedVacancies) {
+      window.setTimeout(() => {
+        setItems(initialVacancies);
+        setIsLoading(false);
+      }, 0);
+      return;
+    }
+
+    try {
+      const storedItems = JSON.parse(storedVacancies) as Vacancy[];
+      window.setTimeout(() => {
+        setItems(storedItems);
+        setIsLoading(false);
+      }, 0);
+    } catch {
+      window.localStorage.removeItem(careersStorageKey);
+      window.setTimeout(() => {
+        setIsLoading(false);
+      }, 0);
+    }
+  }, []);
 
   const openAdd = () => { setEditItem(null); setForm(emptyForm); setShowModal(true); };
   const openEdit = (v: Vacancy) => { setEditItem(v); setForm({ title: v.title, type: v.type, location: v.location, department: v.department, deadline: v.deadline, description: v.description, isOpen: v.isOpen }); setShowModal(true); };
 
   const handleSave = () => {
+    let nextItems: Vacancy[];
     if (editItem) {
-      setItems((prev) => prev.map((v) => v.id === editItem.id ? { ...editItem, ...form } : v));
+      nextItems = items.map((v) => v.id === editItem.id ? { ...editItem, ...form } : v);
     } else {
-      setItems((prev) => [...prev, { id: `j${Date.now()}`, ...form }]);
+      nextItems = [...items, { id: `j${Date.now()}`, ...form }];
     }
+    setItems(nextItems);
+    window.localStorage.setItem(careersStorageKey, JSON.stringify(nextItems));
     setShowModal(false);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Delete this vacancy?")) setItems((prev) => prev.filter((v) => v.id !== id));
+    if (confirm("Delete this vacancy?")) {
+      const nextItems = items.filter((v) => v.id !== id);
+      setItems(nextItems);
+      window.localStorage.setItem(careersStorageKey, JSON.stringify(nextItems));
+    }
   };
 
   const toggleOpen = (id: string) => {
-    setItems((prev) => prev.map((v) => v.id === id ? { ...v, isOpen: !v.isOpen } : v));
+    const nextItems = items.map((v) => v.id === id ? { ...v, isOpen: !v.isOpen } : v);
+    setItems(nextItems);
+    window.localStorage.setItem(careersStorageKey, JSON.stringify(nextItems));
   };
 
   return (
@@ -63,6 +81,7 @@ export default function AdminCareersPage() {
       </div>
 
       <div className="space-y-4">
+        {isLoading && <p className="text-sm text-[#8295a3]">Loading vacancies...</p>}
         {items.map((v) => (
           <div key={v.id} className={`bg-white rounded-xl border p-5 shadow-sm flex items-start justify-between gap-4 ${v.isOpen ? "border-[#E4EAEE]" : "border-[#E4EAEE] opacity-60"}`}>
             <div className="flex-1">

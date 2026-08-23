@@ -1,0 +1,47 @@
+[
+  {
+    "id": "p1787495972604",
+    "name": "pppp",
+    "location": "",
+    "capacityMW": 0,
+    "status": "Planning",
+    "image": "/uploads/projects/ea0670d5-1e89-48f6-891c-09f50b3d9058.webp",
+    "description": ""
+  },
+  {
+    "id": "p1787423960590",
+    "name": "",
+    "location": "",
+    "capacityMW": 0,
+    "status": "Planning",
+    "image": "/uploads/projects/82bf7973-ae74-4a69-a2e6-84f950af2c09.jpg",
+    "description": ""
+  },
+  {
+    "id": "p1787423976754",
+    "name": "r",
+    "location": "r",
+    "capacityMW": 0,
+    "status": "Operational",
+    "image": "/uploads/projects/e54b2167-fe2e-41fa-8587-cff687afce6a.jpg",
+    "description": "r"
+  },
+  {
+    "id": "p1787423993536",
+    "name": "tt",
+    "location": "tt",
+    "capacityMW": 0,
+    "status": "Under Construction",
+    "image": "/uploads/projects/c13c7f84-b001-4863-b6ed-21d3ba1ffb5b.jpg",
+    "description": "ttt"
+  },
+  {
+    "id": "p1787493684960",
+    "name": "rupak",
+    "location": "",
+    "capacityMW": 0,
+    "status": "Planning",
+    "image": "/uploads/projects/caea2511-ac1e-4f5e-8731-a60a225be7d0.jpg",
+    "description": ""
+  }
+]

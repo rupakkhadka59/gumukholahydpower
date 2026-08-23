@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { projects as initialProjects } from "@/lib/data";
 import type { Project } from "@/lib/data";
 import { Plus, Pencil, Trash2, MapPin, Zap, X } from "lucide-react";
@@ -19,26 +19,54 @@ const statusColors: Record<Project["status"], string> = {
 };
 
 export default function AdminProjectsPage() {
-  const [items, setItems] = useState<Project[]>(initialProjects);
+  const [items, setItems] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Project | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const openAdd = () => { setEditItem(null); setForm(emptyForm); setShowModal(true); };
-  const openEdit = (p: Project) => { setEditItem(p); setForm({ name: p.name, location: p.location, capacityMW: p.capacityMW, status: p.status, commissioningYear: p.commissioningYear, image: p.image, description: p.description }); setShowModal(true); };
+  useEffect(() => {
+    fetch("/api/projects", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((result: { data: Project[] }) => setItems(result.data))
+      .catch(() => setItems(initialProjects))
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  const handleSave = () => {
+  const openAdd = () => { setEditItem(null); setForm(emptyForm); setSelectedImage(null); setShowModal(true); };
+  const openEdit = (p: Project) => { setEditItem(p); setForm({ name: p.name, location: p.location, capacityMW: p.capacityMW, status: p.status, commissioningYear: p.commissioningYear, image: p.image, description: p.description }); setSelectedImage(null); setShowModal(true); };
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSelectedImage(event.target.files?.[0] ?? null);
+  };
+
+  const handleSave = async () => {
+    const project = editItem ? { ...editItem, ...form } : { id: `p${Date.now()}`, ...form };
+    const body = new FormData();
+    Object.entries(project).forEach(([key, value]) => {
+      if (value !== undefined) body.append(key, String(value));
+    });
+    if (selectedImage) body.append("imageFile", selectedImage);
+    const response = await fetch("/api/projects", {
+      method: "POST",
+      body,
+    });
+    if (!response.ok) return;
+    const result = await response.json() as { data: Project };
     if (editItem) {
-      setItems((prev) => prev.map((p) => (p.id === editItem.id ? { ...editItem, ...form } : p)));
+      setItems((prev) => prev.map((p) => (p.id === editItem.id ? result.data : p)));
     } else {
-      setItems((prev) => [...prev, { id: `p${Date.now()}`, ...form }]);
+      setItems((prev) => [result.data, ...prev]);
     }
     setShowModal(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this project?")) {
-      setItems((prev) => prev.filter((p) => p.id !== id));
+      const response = await fetch("/api/projects", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      if (response.ok) setItems((prev) => prev.filter((p) => p.id !== id));
     }
   };
 
@@ -55,6 +83,7 @@ export default function AdminProjectsPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-[#E4EAEE] shadow-sm overflow-hidden">
+        {isLoading && <p className="p-6 text-sm text-[#8295a3]">Loading projects...</p>}
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E4EAEE] bg-[#F7FAFB]">
@@ -102,7 +131,7 @@ export default function AdminProjectsPage() {
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-[#F7FAFB] rounded-lg"><X className="w-5 h-5 text-[#8295a3]" /></button>
             </div>
             <div className="p-6 space-y-4">
-              {([["Name", "name", "text"], ["Location", "location", "text"], ["Image URL", "image", "text"], ["Description", "description", "textarea"]] as const).map(([label, field, type]) => (
+              {([["Name", "name", "text"], ["Location", "location", "text"], ["Description", "description", "textarea"]] as const).map(([label, field, type]) => (
                 <div key={field}>
                   <label className="block text-sm font-medium text-[#1E2A33] mb-1">{label}</label>
                   {type === "textarea" ? (
@@ -117,6 +146,13 @@ export default function AdminProjectsPage() {
                   <label className="block text-sm font-medium text-[#1E2A33] mb-1">Capacity (MW)</label>
                   <input type="number" value={form.capacityMW} onChange={(e) => setForm((f) => ({ ...f, capacityMW: Number(e.target.value) }))} className="w-full px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A8FA3] bg-[#F7FAFB]" />
                 </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#1E2A33] mb-1">Project Image</label>
+                    <label className="flex cursor-pointer items-center rounded-lg border border-dashed border-[#1A8FA3]/50 bg-[#F7FAFB] px-3 py-2 text-sm text-[#1A8FA3]">
+                      <span className="truncate">{selectedImage?.name ?? (form.image ? "Current project image" : "Choose image")}</span>
+                      <input ref={imageInputRef} type="file" accept=".heic,.heif,.jpg,.jpeg,.png,.svg,.webp,.avif" onChange={handleImageChange} className="sr-only" />
+                    </label>
+                  </div>
                 <div>
                   <label className="block text-sm font-medium text-[#1E2A33] mb-1">Year</label>
                   <input type="number" value={form.commissioningYear ?? ""} onChange={(e) => setForm((f) => ({ ...f, commissioningYear: e.target.value ? Number(e.target.value) : undefined }))} className="w-full px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A8FA3] bg-[#F7FAFB]" />
