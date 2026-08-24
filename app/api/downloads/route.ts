@@ -1,61 +1,15 @@
-import { randomUUID } from 'crypto';
-import { mkdir, unlink, writeFile } from 'fs/promises';
-import path from 'path';
-import { NextResponse } from 'next/server';
-import type { DownloadItem } from '@/lib/data';
-import { getStoredReports, saveReports } from '@/lib/report-store';
-import { addActivity } from '@/lib/activity-store';
+import { randomUUID } from "crypto";
+import { NextResponse } from "next/server";
+import type { DownloadItem } from "@/lib/data";
+import { addActivity } from "@/lib/activity-store";
+import { getPublicFileUrl, getSupabaseAdmin } from "@/lib/supabase-admin";
 
-export const runtime = 'nodejs';
-const reportDirectory = path.join(process.cwd(), 'public', 'uploads', 'reports');
+export const runtime = "nodejs";
+type DownloadRow = { id: string; title: string; description: string; type: string; date: string; file_size: string; storage_path: string | null };
+const toDownload = (item: DownloadRow): DownloadItem => ({ id: item.id, title: item.title, description: item.description, type: item.type, date: item.date, fileSize: item.file_size, fileUrl: item.storage_path ? getPublicFileUrl("documents", item.storage_path) : "" });
 
-export async function GET() {
-  return NextResponse.json({ data: await getStoredReports() }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
-}
+export async function GET() { try { const { data, error } = await getSupabaseAdmin().from("downloads").select("id, title, description, type, date, file_size, storage_path").order("date", { ascending: false }); if (error) throw error; return NextResponse.json({ data: (data as DownloadRow[]).map(toDownload) }, { headers: { "Cache-Control": "no-store, max-age=0" } }); } catch (error) { return NextResponse.json({ message: error instanceof Error ? error.message : "Unable to load downloads." }, { status: 500 }); } }
 
-export async function POST(request: Request) {
-  const contentType = request.headers.get('content-type') ?? '';
-  const formData = contentType.includes('multipart/form-data') ? await request.formData() : null;
-  const body = formData ? Object.fromEntries(['title', 'description', 'type', 'date'].map((field) => [field, formData.get(field)])) : await request.json();
-  const file = formData?.get('file');
-  let fileUrl = '';
-  let fileSize = String(body.fileSize ?? '');
+export async function POST(request: Request) { try { const formData = await request.formData(); const file = formData.get("file"); const title = String(formData.get("title") ?? "").trim(); if (!title) return NextResponse.json({ message: "A title is required." }, { status: 400 }); let storagePath: string | null = null; let fileSize = String(formData.get("fileSize") ?? ""); const supabase = getSupabaseAdmin(); if (file instanceof File && file.size > 0) { if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return NextResponse.json({ message: "Only PDF files are supported." }, { status: 400 }); storagePath = `${randomUUID()}.pdf`; const { error } = await supabase.storage.from("documents").upload(storagePath, Buffer.from(await file.arrayBuffer()), { contentType: "application/pdf" }); if (error) throw error; fileSize = `${(file.size / (1024 * 1024)).toFixed(2)} MB`; } const { data, error } = await supabase.from("downloads").insert({ title, description: String(formData.get("description") ?? ""), type: "PDF", date: String(formData.get("date") ?? new Date().toISOString().slice(0, 10)), file_size: fileSize, storage_path: storagePath }).select("id, title, description, type, date, file_size, storage_path").single(); if (error) throw error; await addActivity(`Report added: ${title}`); return NextResponse.json({ data: toDownload(data as DownloadRow) }, { status: 201 }); } catch (error) { return NextResponse.json({ message: error instanceof Error ? error.message : "Unable to add report." }, { status: 500 }); } }
 
-  if (file instanceof File && file.size > 0) {
-    if (path.extname(file.name).toLowerCase() !== '.pdf') return NextResponse.json({ message: 'Only PDF files are supported.' }, { status: 400 });
-    await mkdir(reportDirectory, { recursive: true });
-    const fileName = `${randomUUID()}.pdf`;
-    await writeFile(path.join(reportDirectory, fileName), Buffer.from(await file.arrayBuffer()));
-    fileUrl = `/uploads/reports/${fileName}`;
-    fileSize = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
-  }
-  const newItem: DownloadItem = {
-    id: `d${randomUUID()}`,
-    ...body,
-    type: 'PDF',
-    fileSize,
-    fileUrl,
-  };
-  await saveReports([newItem, ...(await getStoredReports())]);
-  await addActivity(`Report added: ${String(newItem.title)}`);
-  return NextResponse.json({ data: newItem, message: 'Download created successfully.' }, { status: 201 });
-}
-
-export async function DELETE(request: Request) {
-  const { id } = await request.json() as { id?: string };
-  const reports = await getStoredReports();
-  const report = reports.find((item) => item.id === id);
-  if (!report) return NextResponse.json({ message: 'Report not found.' }, { status: 404 });
-
-  if (report.fileUrl?.startsWith('/uploads/reports/')) {
-    try {
-      await unlink(path.join(process.cwd(), 'public', report.fileUrl));
-    } catch {
-      // Continue removing metadata when the file is already missing.
-    }
-  }
-
-  await saveReports(reports.filter((item) => item.id !== id));
-  await addActivity(`Report deleted: ${report.title}`);
-  return NextResponse.json({ message: 'Report deleted successfully.' });
-}
+export async function DELETE(request: Request) { try { const { id } = await request.json() as { id?: string }; const supabase = getSupabaseAdmin(); const { data: item, error: findError } = await supabase.from("downloads").select("title, storage_path").eq("id", id).single(); if (findError) throw findError; if (item.storage_path) { const { error } = await supabase.storage.from("documents").remove([item.storage_path]); if (error) throw error; } const { error } = await supabase.from("downloads").delete().eq("id", id); if (error) throw error; await addActivity(`Report deleted: ${item.title}`); return NextResponse.json({ message: "Report deleted successfully." }); } catch (error) { return NextResponse.json({ message: error instanceof Error ? error.message : "Unable to delete report." }, { status: 500 }); } }

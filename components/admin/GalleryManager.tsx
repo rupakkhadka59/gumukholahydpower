@@ -2,139 +2,18 @@
 
 import Image from "next/image";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import { ImagePlus, Trash2 } from "lucide-react";
-import { GalleryItem } from "@/lib/gallery";
+import { FolderPlus, Images, Pencil, Trash2, Upload, X } from "lucide-react";
+import { GalleryAlbum } from "@/lib/gallery";
 
-const supportedImageExtensions = [".heic", ".heif", ".jpg", ".jpeg", ".png", ".svg", ".webp", ".avif"];
-const supportedImageTypes = supportedImageExtensions.join(", ");
+const extensions = [".heic", ".heif", ".jpg", ".jpeg", ".png", ".svg", ".webp", ".avif"];
 
 export default function GalleryManager() {
-  const [items, setItems] = useState<GalleryItem[]>([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isPosting, setIsPosting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pendingDelete, setPendingDelete] = useState<GalleryItem | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetch("/api/gallery", { cache: "no-store" }).then((response) => response.json()).then((result: { data: GalleryItem[] }) => setItems(result.data)).catch(() => setErrorMessage("Unable to load gallery.")).finally(() => setIsLoading(false));
-  }, []);
-
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
-    if (!supportedImageExtensions.includes(extension)) {
-      setSelectedFile(null);
-      setPreview("");
-      setSuccessMessage("");
-      setErrorMessage(`Only supported: ${supportedImageTypes}`);
-      event.target.value = "";
-      return;
-    }
-
-    setSelectedFile(file);
-    setPreview(URL.createObjectURL(file));
-    setSuccessMessage("");
-    setErrorMessage("");
-  };
-
-  const handleAdd = async () => {
-    if (!selectedFile) return;
-
-    setIsPosting(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
-      formData.append("title", title);
-      formData.append("description", description);
-      const response = await fetch("/api/gallery", { method: "POST", body: formData });
-      const result = await response.json() as { data?: GalleryItem; message?: string };
-      if (!response.ok || !result.data) throw new Error(result.message ?? "Unable to add image.");
-      setItems((currentItems) => [result.data as GalleryItem, ...currentItems]);
-      setTitle("");
-      setDescription("");
-      setSelectedFile(null);
-      setPreview("");
-      if (imageInputRef.current) imageInputRef.current.value = "";
-      setSuccessMessage("Image added");
-      setErrorMessage("");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to add image.");
-    } finally {
-      setIsPosting(false);
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    fetch("/api/gallery", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Delete failed");
-        const result = await fetch("/api/gallery", { cache: "no-store" }).then((galleryResponse) => galleryResponse.json()) as { data: GalleryItem[] };
-        setItems(result.data);
-      })
-      .catch(() => setErrorMessage("Unable to delete image."));
-  };
-
-  return (
-    <section className="bg-white rounded-xl border border-[#E4EAEE] p-6 shadow-sm">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 rounded-lg bg-[#3EB489]/10 flex items-center justify-center">
-          <ImagePlus className="w-5 h-5 text-[#3EB489]" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-[#1E2A33]">Gallery</h2>
-          <p className="text-sm text-[#8295a3]">Add and manage pictures shown on the public Gallery page.</p>
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] mb-6">
-        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Picture title" className="px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm bg-[#F7FAFB] focus:outline-none focus:ring-2 focus:ring-[#1A8FA3]" />
-        <input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Picture description" className="px-3 py-2 border border-[#E4EAEE] rounded-lg text-sm bg-[#F7FAFB] focus:outline-none focus:ring-2 focus:ring-[#1A8FA3]" />
-        <label className="flex cursor-pointer items-center rounded-lg border border-dashed border-[#1A8FA3]/50 bg-[#F7FAFB] px-3 py-2 text-sm text-[#1A8FA3]">
-          <span className="truncate">{selectedFile?.name ?? "Choose picture"}</span>
-          <input ref={imageInputRef} type="file" accept={supportedImageExtensions.join(",")} onChange={handleFileChange} className="sr-only" />
-        </label>
-        <button type="button" onClick={handleAdd} disabled={!selectedFile || isPosting} className="rounded-lg bg-[#0B3D5C] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1A8FA3] disabled:cursor-not-allowed disabled:opacity-50">{isPosting ? "Posting..." : "Post Picture"}</button>
-      </div>
-      {successMessage && <p role="status" className="mb-6 text-sm font-medium text-[#3EB489]">{successMessage}</p>}
-      {errorMessage && <p role="alert" className="mb-6 text-sm font-medium text-red-500">{errorMessage}</p>}
-
-      {preview && <Image src={preview} alt="Selected gallery preview" width={160} height={100} unoptimized className="mb-6 h-24 w-40 rounded-lg object-cover" />}
-
-      {isLoading && <p className="text-sm text-[#8295a3]">Loading gallery...</p>}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {items.map((item) => (
-          <div key={item.id} className="group relative overflow-hidden rounded-lg border border-[#E4EAEE]">
-            <Image src={item.image} alt={item.title} width={240} height={160} unoptimized className="aspect-[3/2] w-full object-cover" />
-            <div className="flex items-center justify-between gap-2 p-2">
-              <div className="min-w-0"><p className="truncate text-sm font-medium text-[#1E2A33]">{item.title}</p><p className="truncate text-xs text-[#8295a3]">{item.description}</p></div>
-              <button type="button" onClick={() => setPendingDelete(item)} aria-label={`Delete ${item.title}`} className="shrink-0 rounded p-1 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {pendingDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-gallery-title">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h2 id="delete-gallery-title" className="text-lg font-bold text-[#1E2A33]">Are you sure you want to delete this image?</h2>
-            <p className="mt-2 truncate text-sm text-[#8295a3]">{pendingDelete.title}</p>
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setPendingDelete(null)} className="rounded-lg border border-[#E4EAEE] px-4 py-2 text-sm font-medium text-[#1E2A33] transition-colors hover:bg-[#F7FAFB]">Cancel</button>
-              <button type="button" onClick={() => { handleDelete(pendingDelete.id); setPendingDelete(null); }} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600">OK</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </section>
-  );
+  const [albums, setAlbums] = useState<GalleryAlbum[]>([]); const [title, setTitle] = useState(""); const [description, setDescription] = useState(""); const [files, setFiles] = useState<File[]>([]); const [previews, setPreviews] = useState<string[]>([]); const [message, setMessage] = useState(""); const [error, setError] = useState(""); const [saving, setSaving] = useState(false); const [editing, setEditing] = useState<GalleryAlbum | null>(null); const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { fetch("/api/gallery", { cache: "no-store" }).then((r) => r.json()).then((r: { data: GalleryAlbum[] }) => setAlbums(r.data)).catch(() => setError("Unable to load the gallery.")); }, []);
+  useEffect(() => () => previews.forEach(URL.revokeObjectURL), [previews]);
+  const chooseFiles = (event: ChangeEvent<HTMLInputElement>) => { const selected = Array.from(event.target.files ?? []); if (selected.some((file) => !extensions.includes(file.name.slice(file.name.lastIndexOf(".")).toLowerCase()))) { setError("Please choose JPG, PNG, WebP, AVIF, HEIC or SVG files only."); return; } previews.forEach(URL.revokeObjectURL); setFiles(selected); setPreviews(selected.map(URL.createObjectURL)); setError(""); };
+  const createAlbum = async () => { if (!title.trim() || !files.length) { setError("Add an album title and at least one photo."); return; } setSaving(true); try { const data = new FormData(); data.append("title", title); data.append("description", description); files.forEach((file) => data.append("images", file)); const response = await fetch("/api/gallery", { method: "POST", body: data }); const result = await response.json() as { data?: GalleryAlbum; message?: string }; if (!response.ok || !result.data) throw new Error(result.message ?? "Unable to create album."); setAlbums((current) => [result.data as GalleryAlbum, ...current]); setTitle(""); setDescription(""); setFiles([]); previews.forEach(URL.revokeObjectURL); setPreviews([]); if (inputRef.current) inputRef.current.value = ""; setMessage("Album published successfully."); } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to create album."); } finally { setSaving(false); } };
+  const deleteAlbum = async (album: GalleryAlbum) => { if (!window.confirm(`Delete “${album.title}” and all ${album.photos.length} photos?`)) return; const response = await fetch("/api/gallery", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ albumId: album.id }) }); if (response.ok) { setAlbums((current) => current.filter((item) => item.id !== album.id)); setMessage("Album deleted."); } else setError("Unable to delete album."); };
+  const saveEdit = async () => { if (!editing) return; const response = await fetch("/api/gallery", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editing) }); const result = await response.json() as { data?: GalleryAlbum; message?: string }; if (response.ok && result.data) { setAlbums((current) => current.map((item) => item.id === editing.id ? result.data as GalleryAlbum : item)); setEditing(null); setMessage("Album details updated."); } else setError(result.message ?? "Unable to update album."); };
+  return <section className="space-y-6"><div className="rounded-2xl border border-[#E4EAEE] bg-white p-5 shadow-sm sm:p-6"><div className="mb-6 flex gap-3"><span className="rounded-xl bg-[#1A8FA3]/10 p-3 text-[#1A8FA3]"><FolderPlus className="h-5 w-5" /></span><div><h2 className="font-bold text-[#1E2A33]">Create an album</h2><p className="text-sm text-[#8295a3]">Select all photos for one event or project and publish them together.</p></div></div><div className="grid gap-4 md:grid-cols-2"><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Album title" className="rounded-lg border border-[#E4EAEE] px-3 py-2.5 text-sm" /><input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Album description (optional)" className="rounded-lg border border-[#E4EAEE] px-3 py-2.5 text-sm" /></div><label className="mt-4 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#1A8FA3]/35 bg-[#F7FAFB] p-5 text-center hover:border-[#1A8FA3]"><Upload className="mb-2 h-5 w-5 text-[#1A8FA3]" /><span className="text-sm font-semibold text-[#1E2A33]">Select multiple photos</span><span className="mt-1 text-xs text-[#8295a3]">All selected photos will be stored in this album.</span><input ref={inputRef} type="file" multiple accept={extensions.join(",")} onChange={chooseFiles} className="sr-only" /></label>{previews.length > 0 && <div className="mt-4"><p className="mb-2 text-sm font-medium text-[#1E2A33]">{previews.length} photos selected</p><div className="flex gap-2 overflow-x-auto">{previews.map((preview, index) => <Image key={preview} src={preview} alt={`Selected photo ${index + 1}`} width={100} height={72} unoptimized className="h-[72px] w-[100px] shrink-0 rounded-lg object-cover" />)}</div></div>}<div className="mt-5 flex justify-end"><button type="button" onClick={createAlbum} disabled={saving} className="rounded-lg bg-[#0B3D5C] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1A8FA3] disabled:opacity-50">{saving ? "Publishing..." : "Publish album"}</button></div></div>{message && <p className="rounded-lg bg-[#3EB489]/10 px-4 py-3 text-sm text-[#237b5d]">{message}</p>}{error && <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>}<div className="rounded-2xl border border-[#E4EAEE] bg-white p-5 shadow-sm sm:p-6"><div className="mb-5 flex justify-between"><div><h2 className="font-bold text-[#1E2A33]">Published albums</h2><p className="text-sm text-[#8295a3]">Collections shown on the public gallery.</p></div><span className="rounded-full bg-[#F7FAFB] px-3 py-1 text-xs font-semibold text-[#0B3D5C]">{albums.length} albums</span></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{albums.map((album) => <article key={album.id} className="overflow-hidden rounded-xl border border-[#E4EAEE]"><Image src={album.photos[0]?.image ?? ""} alt={album.title} width={500} height={280} unoptimized className="aspect-[16/9] w-full object-cover" /><div className="p-4"><div className="flex justify-between gap-3"><div><h3 className="font-semibold text-[#1E2A33]">{album.title}</h3><p className="mt-1 text-sm text-[#8295a3]">{album.photos.length} photos</p></div><Images className="h-5 w-5 text-[#1A8FA3]" /></div><div className="mt-4 flex gap-2"><button type="button" onClick={() => setEditing({ ...album })} className="inline-flex items-center gap-1 rounded-md bg-[#F7FAFB] px-2.5 py-1.5 text-xs font-semibold text-[#0B3D5C]"><Pencil className="h-3.5 w-3.5" /> Edit</button><button type="button" onClick={() => deleteAlbum(album)} className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /> Delete</button></div></div></article>)}</div></div>{editing && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><div className="w-full max-w-md rounded-2xl bg-white p-6"><div className="flex justify-between"><h2 className="font-bold text-[#1E2A33]">Edit album</h2><button type="button" onClick={() => setEditing(null)}><X className="h-5 w-5" /></button></div><div className="mt-5 space-y-3"><input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} className="w-full rounded-lg border border-[#E4EAEE] px-3 py-2" /><textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} rows={3} className="w-full rounded-lg border border-[#E4EAEE] px-3 py-2" /></div><div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-[#E4EAEE] px-4 py-2 text-sm">Cancel</button><button type="button" onClick={saveEdit} className="rounded-lg bg-[#0B3D5C] px-4 py-2 text-sm text-white">Save changes</button></div></div></div>}</section>;
 }

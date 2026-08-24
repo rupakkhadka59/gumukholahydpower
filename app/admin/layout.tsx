@@ -1,142 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  LayoutDashboard,
-  Zap,
-  Newspaper,
-  Download,
-  Briefcase,
-  Images,
-  LogOut,
-  Menu,
-  Droplets,
-  ChevronRight,
-} from "lucide-react";
+import { Briefcase, ChevronRight, Download, Droplets, Images, LayoutDashboard, LogOut, Menu, Newspaper, Zap } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const navItems = [
-  { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { name: "Projects", href: "/admin/projects", icon: Zap },
-  { name: "News", href: "/admin/news", icon: Newspaper },
-  { name: "Reports", href: "/admin/downloads", icon: Download },
-  { name: "Careers", href: "/admin/careers", icon: Briefcase },
-  { name: "Gallery", href: "/admin/gallery", icon: Images },
-];
+const navItems = [{ name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard }, { name: "Projects", href: "/admin/projects", icon: Zap }, { name: "News", href: "/admin/news", icon: Newspaper }, { name: "Reports", href: "/admin/downloads", icon: Download }, { name: "Careers", href: "/admin/careers", icon: Briefcase }, { name: "Gallery", href: "/admin/gallery", icon: Images }];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Protect admin routes — redirect to login if not authenticated
-  useEffect(() => {
-    if (pathname === "/admin/login") return;
-    const isAuth = sessionStorage.getItem("admin_auth");
-    if (!isAuth) {
-      router.push("/admin/login");
-    }
-  }, [pathname, router]);
-
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_auth");
-    router.push("/admin/login");
-  };
-
-  return (
-    <div className="flex h-screen bg-[#F7FAFB] font-sans overflow-hidden">
-      {/* Sidebar Overlay for Mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-[#0B3D5C] text-white flex flex-col transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
-          <div className="bg-[#1A8FA3] p-2 rounded-lg">
-            <Droplets className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <p className="font-bold text-base leading-tight">Gumu Khola</p>
-            <p className="text-xs text-white/50">Admin Panel</p>
-          </div>
-        </div>
-
-        {/* Nav Items */}
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-[#1A8FA3] text-white"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {item.name}
-                {active && <ChevronRight className="w-4 h-4 ml-auto" />}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Logout */}
-        <div className="px-4 pb-6 border-t border-white/10 pt-4">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-red-500/20 hover:text-red-300 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <header className="bg-white border-b border-[#E4EAEE] h-16 flex items-center justify-between px-6 flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-md text-[#1E2A33] hover:bg-[#E4EAEE]"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="hidden lg:block">
-            <p className="text-sm font-medium text-[#1E2A33]">
-              {navItems.find((i) => pathname.startsWith(i.href))?.name ?? "Admin"}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 ml-auto">
-            <div className="w-8 h-8 rounded-full bg-[#0B3D5C] flex items-center justify-center text-white text-xs font-bold">
-              A
-            </div>
-            <span className="text-sm font-medium text-[#1E2A33] hidden sm:block">Admin</span>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
-      </div>
-    </div>
-  );
+  const pathname = usePathname(); const router = useRouter(); const [sidebarOpen, setSidebarOpen] = useState(false);
+  if (pathname === "/admin/login") return <>{children}</>;
+  const logout = async () => { await createSupabaseBrowserClient().auth.signOut(); router.replace("/admin/login"); router.refresh(); };
+  return <div className="flex h-screen overflow-hidden bg-[#F7FAFB] font-sans">{sidebarOpen && <div className="fixed inset-0 z-20 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}<aside className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-[#0B3D5C] text-white transition-transform duration-300 lg:static ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}><div className="flex items-center gap-3 border-b border-white/10 px-6 py-5"><div className="rounded-lg bg-[#1A8FA3] p-2"><Droplets className="h-5 w-5" /></div><div><p className="font-bold">Gumu Khola</p><p className="text-xs text-white/50">Admin Panel</p></div></div><nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">{navItems.map((item) => { const Icon = item.icon; const active = pathname.startsWith(item.href); return <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${active ? "bg-[#1A8FA3]" : "text-white/70 hover:bg-white/10 hover:text-white"}`}><Icon className="h-5 w-5" />{item.name}{active && <ChevronRight className="ml-auto h-4 w-4" />}</Link>; })}</nav><div className="border-t border-white/10 px-4 pb-6 pt-4"><button type="button" onClick={logout} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-red-500/20 hover:text-red-300"><LogOut className="h-5 w-5" />Logout</button></div></aside><div className="flex flex-1 flex-col overflow-hidden"><header className="flex h-16 flex-none items-center border-b border-[#E4EAEE] bg-white px-6"><button type="button" onClick={() => setSidebarOpen(true)} className="rounded-md p-2 text-[#1E2A33] hover:bg-[#E4EAEE] lg:hidden"><Menu className="h-5 w-5" /></button><p className="hidden text-sm font-medium text-[#1E2A33] lg:block">{navItems.find((item) => pathname.startsWith(item.href))?.name ?? "Admin"}</p><div className="ml-auto flex items-center gap-3"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0B3D5C] text-xs font-bold text-white">A</div><span className="hidden text-sm font-medium text-[#1E2A33] sm:block">Admin</span></div></header><main className="flex-1 overflow-y-auto p-6">{children}</main></div></div>;
 }

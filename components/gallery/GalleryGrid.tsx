@@ -1,61 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { X } from "lucide-react";
-import { GalleryItem } from "@/lib/gallery";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Images, X } from "lucide-react";
+import { GalleryAlbum } from "@/lib/gallery";
 
 export default function GalleryGrid({ limit }: { limit?: number }) {
-  const [items, setItems] = useState<GalleryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
-
-  useEffect(() => {
-    fetch("/api/gallery", { cache: "no-store" }).then((response) => response.json()).then((result: { data: GalleryItem[] }) => setItems(result.data)).catch(() => undefined).finally(() => setIsLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (!selectedItem) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelectedItem(null);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedItem]);
-
-  return (
-    <>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {isLoading && <p className="text-sm text-muted-foreground">Loading gallery...</p>}
-      {(limit ? items.slice(0, limit) : items).map((item) => (
-        <button key={item.id} type="button" onClick={() => setSelectedItem(item)} className="group overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-shadow hover:shadow-md">
-          <figure>
-            <div className="relative aspect-[4/3] overflow-hidden">
-              <Image src={item.image} alt={item.title} fill unoptimized className="object-cover transition-transform duration-500 group-hover:scale-105" />
-            </div>
-            <figcaption className="p-4"><h2 className="font-semibold text-primary">{item.title}</h2><p className="mt-1 text-sm text-muted-foreground">{item.description}</p></figcaption>
-          </figure>
-        </button>
-      ))}
-      </div>
-
-      {selectedItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-label={selectedItem.title} onClick={() => setSelectedItem(null)}>
-          <div className="relative flex max-h-[90vh] w-full max-w-5xl flex-col items-center" onClick={(event) => event.stopPropagation()}>
-            <button type="button" onClick={() => setSelectedItem(null)} aria-label="Close image" className="absolute right-0 top-0 z-10 rounded-full bg-white/90 p-2 text-primary transition-colors hover:bg-white">
-              <X className="h-6 w-6" />
-            </button>
-            <div className="relative h-[70vh] w-full">
-              <Image src={selectedItem.image} alt={selectedItem.title} fill unoptimized className="object-contain" sizes="90vw" />
-            </div>
-            <div className="w-full max-w-2xl bg-white p-5 text-center">
-              <h2 className="text-xl font-bold text-primary">{selectedItem.title}</h2>
-              {selectedItem.description && <p className="mt-1 text-muted-foreground">{selectedItem.description}</p>}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+  const [albums, setAlbums] = useState<GalleryAlbum[]>([]); const [activeAlbum, setActiveAlbum] = useState<GalleryAlbum | null>(null); const [photoIndex, setPhotoIndex] = useState(0); const [loading, setLoading] = useState(true); const touchStartX = useRef<number | null>(null); const visibleAlbums = limit ? albums.slice(0, limit) : albums;
+  useEffect(() => { fetch("/api/gallery", { cache: "no-store" }).then((r) => r.json()).then((r: { data: GalleryAlbum[] }) => setAlbums(r.data)).finally(() => setLoading(false)); }, []);
+  const move = (offset: number) => { if (activeAlbum) setPhotoIndex((index) => (index + offset + activeAlbum.photos.length) % activeAlbum.photos.length); };
+  useEffect(() => { if (!activeAlbum) return; const key = (event: KeyboardEvent) => { if (event.key === "Escape") setActiveAlbum(null); if (event.key === "ArrowLeft") setPhotoIndex((index) => (index - 1 + activeAlbum.photos.length) % activeAlbum.photos.length); if (event.key === "ArrowRight") setPhotoIndex((index) => (index + 1) % activeAlbum.photos.length); }; window.addEventListener("keydown", key); return () => window.removeEventListener("keydown", key); }, [activeAlbum]);
+  const open = (album: GalleryAlbum) => { setActiveAlbum(album); setPhotoIndex(0); };
+  return <><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{loading && <p className="text-sm text-muted-foreground">Loading gallery...</p>}{visibleAlbums.map((album) => <button key={album.id} type="button" onClick={() => open(album)} className="group overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-shadow hover:shadow-md"><div className="relative aspect-[4/3] overflow-hidden"><Image src={album.photos[0]?.image ?? ""} alt={album.title} fill unoptimized className="object-cover transition-transform duration-500 group-hover:scale-105" /><span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white"><Images className="h-3.5 w-3.5" />{album.photos.length} photos</span></div><div className="p-4"><h2 className="font-semibold text-primary">{album.title}</h2>{album.description && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{album.description}</p>}</div></button>)}</div>{activeAlbum && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4" role="dialog" aria-modal="true" aria-label={activeAlbum.title} onClick={() => setActiveAlbum(null)}><div className="relative flex max-h-[90vh] w-full max-w-5xl flex-col items-center" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { touchStartX.current = e.touches[0]?.clientX ?? null; }} onTouchEnd={(e) => { const endX = e.changedTouches[0]?.clientX; if (touchStartX.current !== null && endX !== undefined && Math.abs(touchStartX.current - endX) > 45) move(touchStartX.current > endX ? 1 : -1); touchStartX.current = null; }}><button type="button" onClick={() => setActiveAlbum(null)} aria-label="Close gallery" className="absolute right-0 top-0 z-10 rounded-full bg-white/90 p-2 text-primary"><X className="h-6 w-6" /></button><div className="relative h-[68vh] w-full"><Image src={activeAlbum.photos[photoIndex].image} alt={activeAlbum.photos[photoIndex].title} fill unoptimized className="object-contain" sizes="90vw" />{activeAlbum.photos.length > 1 && <><button type="button" onClick={() => move(-1)} aria-label="Previous photo" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/45 p-2 text-white sm:left-4"><ChevronLeft className="h-6 w-6" /></button><button type="button" onClick={() => move(1)} aria-label="Next photo" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/45 p-2 text-white sm:right-4"><ChevronRight className="h-6 w-6" /></button></>}</div><div className="w-full max-w-2xl bg-white p-5 text-center"><p className="text-xs font-semibold uppercase tracking-wider text-secondary">{activeAlbum.title}</p><h2 className="mt-1 text-xl font-bold text-primary">{activeAlbum.photos[photoIndex].title}</h2><p className="mt-3 text-xs text-muted-foreground">{photoIndex + 1} of {activeAlbum.photos.length} · Swipe or use arrow keys</p></div></div></div>}</>;
 }
