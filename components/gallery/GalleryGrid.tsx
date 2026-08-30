@@ -6,7 +6,12 @@ import { ChevronLeft, ChevronRight, Images, X } from "lucide-react";
 import { GalleryAlbum } from "@/lib/gallery";
 
 export default function GalleryGrid({ limit }: { limit?: number }) {
-  const [albums, setAlbums] = useState<GalleryAlbum[]>([]); const [activeAlbum, setActiveAlbum] = useState<GalleryAlbum | null>(null); const [photoIndex, setPhotoIndex] = useState(0); const [loading, setLoading] = useState(true); const touchStartX = useRef<number | null>(null); const visibleAlbums = limit ? albums.slice(0, limit) : albums;
+  const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
+  const [activeAlbum, setActiveAlbum] = useState<GalleryAlbum | null>(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const touchStartX = useRef<number | null>(null);
+  const visibleAlbums = typeof limit === "number" && limit > 0 ? albums.slice(0, limit) : albums;
   useEffect(() => { fetch("/api/gallery", { cache: "no-store" }).then((r) => r.json()).then((r: { data: GalleryAlbum[] }) => setAlbums(r.data)).finally(() => setLoading(false)); }, []);
   const move = (offset: number) => { if (activeAlbum) setPhotoIndex((index) => (index + offset + activeAlbum.photos.length) % activeAlbum.photos.length); };
   useEffect(() => { if (!activeAlbum) return; const key = (event: KeyboardEvent) => { if (event.key === "Escape") setActiveAlbum(null); if (event.key === "ArrowLeft") setPhotoIndex((index) => (index - 1 + activeAlbum.photos.length) % activeAlbum.photos.length); if (event.key === "ArrowRight") setPhotoIndex((index) => (index + 1) % activeAlbum.photos.length); }; window.addEventListener("keydown", key); return () => window.removeEventListener("keydown", key); }, [activeAlbum]);
